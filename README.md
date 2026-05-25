@@ -1,5 +1,5 @@
 # minD
-minD - это полность анонимный минималистичный и простой онлайн чат
+minD - anonymous and minimalist online chat
 
 ![Dark theme](/assets/localhost_51732.png)
 ![Light theme](/assets/localhost_51731.png)
