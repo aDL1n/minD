@@ -28,7 +28,7 @@ public class MessageService {
             final @NonNull Long beforeId,
             final @NonNull Pageable pageable
     ) {
-        return this.repository.findByIdLessThanEqualOrderByIdDesc(beforeId, pageable).reversed()
+        return this.repository.findByIdLessThanEqualOrderByIdDesc(beforeId, pageable)
                 .stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
