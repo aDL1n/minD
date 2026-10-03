@@ -1,4 +1,4 @@
-package dev.adlin.mind.entity;
+package dev.adlin.mind.message;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,15 +17,15 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "messages")
-public class ChatMessageEntity {
+public class MessageEntity {
 
     @Id
-    @Column(name = "Id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "message")
-    private String message;
+    @Column(name = "payload")
+    private String payload;
 
     @Column(name = "timestamp")
     private Long timestamp;
