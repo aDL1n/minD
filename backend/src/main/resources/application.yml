@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: "minD-backend"
+  datasource:
+    url: jdbc:postgresql://192.168.0.105:5432/postgres
+    username: postgres
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+web:
+  allowed-frontend-origin: "http://localhost:5173"
