@@ -16,7 +16,7 @@ public class MessageController {
 
     @GetMapping("/message/get")
     public ResponseEntity<List<MessageDto>> get(@RequestParam(defaultValue = "20") int limit) {
-        return ResponseEntity.ok(this.service.get(PageRequest.of(0, limit)).reversed());
+        return ResponseEntity.ok(this.service.get(PageRequest.of(0, limit)));
     }
 
     @GetMapping("/message/get/previous")
@@ -25,7 +25,7 @@ public class MessageController {
             @RequestParam(defaultValue = "20") int limit
     ) {
         final PageRequest pageable = PageRequest.of(0, limit);
-        return ResponseEntity.ok(this.service.getPrevious(beforeId, pageable).reversed());
+        return ResponseEntity.ok(this.service.getPrevious(beforeId, pageable));
     }
 
     @PostMapping("/message/send")

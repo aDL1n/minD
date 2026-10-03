@@ -19,7 +19,8 @@ public class MessageService {
     private final ClientService clientService;
 
     public @NonNull List<MessageDto> get(final @NonNull Pageable pageable) {
-        return this.repository.findByOrderByIdDesc(pageable).stream()
+        return this.repository.findByOrderByIdAsc(pageable)
+                .stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -28,7 +29,7 @@ public class MessageService {
             final @NonNull Long beforeId,
             final @NonNull Pageable pageable
     ) {
-        return this.repository.findByIdLessThanEqualOrderByIdDesc(beforeId, pageable)
+        return this.repository.findByIdLessThanEqualOrderByIdAsc(beforeId, pageable)
                 .stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());

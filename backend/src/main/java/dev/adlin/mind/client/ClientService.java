@@ -1,11 +1,11 @@
 package dev.adlin.mind.client;
 
 import dev.adlin.mind.message.MessageDto;
-import io.vavr.control.Try;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,10 +35,10 @@ public class ClientService {
     }
 
     private void tryReceive(final @NonNull SseEmitter client, final @NonNull MessageDto message) {
-        Try.run(() -> client.send(message))
-                .onFailure(_ -> {
-                    clients.remove(client);
-                    client.complete();
-                });
+        try {
+            client.send(message);
+        } catch (IOException | IllegalStateException exception) {
+            clients.remove(client);
+        }
     }
 }

@@ -1,14 +1,13 @@
 import { Box } from "@chakra-ui/react";
-import { formatUnixTimestamp } from "@/util/util";
-import type { Message as ChatMessage } from "@/features/api";
-import { useColorModeValue } from "@/components/ui/color-mode";
-import type { FC } from "react";
+import { formatUnixTimestamp } from '@/utils/format-date';
+import type { Message as ChatMessage } from '@/features/chat/types/message';
+import { useColorModeValue } from '@/hooks/use-color-mode';
 
 interface MessageProps {
     message: ChatMessage
 }
 
-const Message: FC<MessageProps> = ({ message }) => {
+export function Message({ message }: MessageProps) {
 
     const messageBackground = useColorModeValue("rgb(229, 225, 218)", "#2a2623")
     const messageBorder = useColorModeValue("#5f5b59ff", "#4a413b")
@@ -42,4 +41,3 @@ const Message: FC<MessageProps> = ({ message }) => {
     );
 }
 
-export default Message;

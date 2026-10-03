@@ -1,15 +1,20 @@
-import type {FC} from "react";
-import {Box, ClientOnly, Heading, IconButton} from "@chakra-ui/react";
-import {LuMoon, LuSun } from "react-icons/lu";
-import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
+import { Box, ClientOnly, Heading, IconButton } from "@chakra-ui/react";
+import { LuMoon, LuSun } from "react-icons/lu";
+import { useColorMode, useColorModeValue } from '@/hooks/use-color-mode';
 
-const Header: FC = () => {
-    const { toggleColorMode, colorMode } = useColorMode()
+export interface HeaderProps {
+    online: number
+}
+
+export function ChatHeader({online}: HeaderProps) {
+    const {toggleColorMode, colorMode} = useColorMode()
 
     const border = useColorModeValue("#5b6568ff", "#4a413b")
     const heading = useColorModeValue("#20353bff", "#e6dfd6")
     const headingBackground = useColorModeValue("rgb(229, 225, 218)", "rgba(80, 75, 70, 0.4)")
     const buttonBackground = useColorModeValue("rgb(229, 225, 218)", "#2a2623")
+    const inputColor = useColorModeValue("#3b4b50ff", "#e6dfd6")
+    const background = useColorModeValue("#F1F0E8", "#1c1917")
 
     return (
         <Box
@@ -26,13 +31,13 @@ const Header: FC = () => {
                 borderRightWidth="2px"
                 width="calc(8rem + 2px)"
                 textAlign="center"
-
                 backgroundImage={`radial-gradient(${headingBackground} 1px, transparent 1px)`}
                 backgroundSize="12px 12px"
                 color={heading}
             >
                 minD
             </Heading>
+
             <Box
                 flex="1"
                 backgroundImage={`
@@ -45,11 +50,26 @@ const Header: FC = () => {
                     )
                   `}
                 display="flex"
-                justifyContent="flex-end"
                 alignItems="center"
+                justifyContent="space-between"
             >
+                <Box
+                    borderRadius="0px"
+                    borderStyle="solid"
+                    borderColor={border}
+                    borderWidth="2px"
+                    alignSelf="center"
+                    color={inputColor}
+                    backgroundColor={background}
+                    marginInlineStart="24px"
+                    padding="4px"
+                >
+                    онлайн: {online}
+                </Box>
+
                 <ClientOnly>
                     <IconButton
+                        aria-label="Переключить тему"
                         onClick={toggleColorMode}
                         variant="outline"
                         size="sm"
@@ -59,7 +79,7 @@ const Header: FC = () => {
                         borderWidth="2px"
                         marginInlineEnd="24px"
                     >
-                        {colorMode === "light" ? <LuSun /> : <LuMoon />}
+                        {colorMode === "light" ? <LuSun/> : <LuMoon/>}
                     </IconButton>
                 </ClientOnly>
             </Box>
@@ -67,4 +87,3 @@ const Header: FC = () => {
     )
 }
 
-export default Header;

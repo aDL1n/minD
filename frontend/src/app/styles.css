@@ -16,3 +16,11 @@
 body {
   margin: 0;
 }
+
+:root.dark {
+  background-color: #1c1917;
+}
+
+#root {
+  min-height: 100vh;
+}
