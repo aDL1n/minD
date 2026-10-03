@@ -6,19 +6,20 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ClientService {
 
-    private final Set<SseEmitter> clients = new HashSet<>();
+    private final Set<SseEmitter> clients = ConcurrentHashMap.newKeySet();
 
     public @NonNull SseEmitter subscribe() {
         final SseEmitter client = new SseEmitter(60000L);
 
         client.onCompletion(() -> clients.remove(client));
         client.onTimeout(() -> clients.remove(client));
+        client.onError(_ -> clients.remove(client));
 
         clients.add(client);
 

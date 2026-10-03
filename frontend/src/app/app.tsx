@@ -89,8 +89,9 @@ const App = () => {
 
     const sendMessage = async () => {
         if (!inputRef.current?.value) return;
-        const msg: ChatMessage = {message: inputRef.current.value};
-        await api.sendMessage(msg);
+
+        const message: ChatMessage = {payload: inputRef.current.value};
+        await api.sendMessage(message);
         inputRef.current.value = "";
     };
 

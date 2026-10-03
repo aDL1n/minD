@@ -1,6 +1,6 @@
 import { Box } from "@chakra-ui/react";
-import { formatUnixTimestamp } from "@/util";
-import type { ChatMessage } from "@/api";
+import { formatUnixTimestamp } from "@/util/util";
+import type { Message as ChatMessage } from "@/features/api";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import type { FC } from "react";
 
@@ -28,7 +28,7 @@ const Message: FC<MessageProps> = ({ message }) => {
             fontSize="l"
             width="auto"
         >
-            {message.message}
+            {message.payload}
             <Box
                 color="gray.500"
                 fontSize="0.7rem"

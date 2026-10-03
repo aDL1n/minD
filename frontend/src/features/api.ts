@@ -3,12 +3,12 @@ import { toaster } from "@/components/ui/toaster";
 
 export interface Message {
     id?: number;
-    message: string;
+    payload: string;
     timestamp?: number;
 }
 
 export class Api {
-    private baseUrl = "http://localhost:8080/api/v1";
+    private baseUrl = "/api/v1";
 
     async getMessages(limit: number): Promise<Message[]> {
         const response = await axios.get<Message[]>(`${this.baseUrl}/message/get`, {
@@ -19,8 +19,8 @@ export class Api {
         return response.data;
     }
 
-    async sendMessage(message: Message): Promise<Message> {
-        const response = await axios.post(
+    async sendMessage(message: Message): Promise<void> {
+        await axios.post(
             `${this.baseUrl}/message/send`,
             JSON.stringify(message),
             {
@@ -29,7 +29,6 @@ export class Api {
                 }
             }
         );
-        return response.data;
     }
 
     subscribe(
@@ -55,7 +54,7 @@ export class Api {
             console.error("SSE error", error);
 
             if (onError) onError(error);
-            eventSource.close();
+            // EventSource reconnects automatically after a timeout or network error.
         };
         return eventSource;
     }

@@ -3,7 +3,6 @@ package dev.adlin.mind.client;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -20,7 +19,7 @@ public class ClientController {
         return ResponseEntity.ok(service.getOnlineCount());
     }
 
-    @PostMapping("/subscribe")
+    @GetMapping(value = "/subscribe")
     public SseEmitter subscribe() {
         return service.subscribe();
     }
