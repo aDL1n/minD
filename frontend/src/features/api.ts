@@ -10,11 +10,11 @@ export interface Message {
 export class Api {
     private baseUrl = "/api/v1";
 
-    async getMessages(limit: number): Promise<Message[]> {
-        const response = await axios.get<Message[]>(`${this.baseUrl}/message/get`, {
-            params: { limit },
-        });
-
+    async getMessages(limit = 20): Promise<Message[]> {
+        const response = await axios.get<Message[]>(
+            `${this.baseUrl}/message/get`,
+            { params: { limit }}
+        );
 
         return response.data;
     }
@@ -29,6 +29,13 @@ export class Api {
                 }
             }
         );
+    }
+
+    async getPreviousMessages(beforeId: number, limit = 20): Promise<Message[]> {
+        const response = await axios.get<Message[]>(`${this.baseUrl}/message/get/previous`, {
+            params: {beforeId: beforeId - 1, limit},
+        });
+        return response.data;
     }
 
     subscribe(
@@ -57,22 +64,6 @@ export class Api {
             // EventSource reconnects automatically after a timeout or network error.
         };
         return eventSource;
-    }
-
-    async fetchMessageHistory(limit: number, beforeId?: number): Promise<Message[]> {
-        if (beforeId) {
-            beforeId = beforeId - 1;
-
-            const response = await axios.get(`${this.baseUrl}/message/get/previous`, {
-                params: {
-                    beforeId, limit
-                }
-            });
-
-            return response.data;
-        }
-
-        return [];
     }
 
     async getOnlineCount(): Promise<number> {

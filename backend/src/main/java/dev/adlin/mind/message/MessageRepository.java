@@ -9,5 +9,5 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
 
     List<MessageEntity> findByIdLessThanEqualOrderByIdDesc(long beforeId, Pageable pageable);
 
-    List<MessageEntity> findTopByOrderByTimestampDesc(Pageable pageable);
+    List<MessageEntity> findByOrderByIdDesc(Pageable pageable);
 }

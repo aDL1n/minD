@@ -19,7 +19,7 @@ public class MessageService {
     private final ClientService clientService;
 
     public @NonNull List<MessageDto> get(final @NonNull Pageable pageable) {
-        return this.repository.findTopByOrderByTimestampDesc(pageable).stream()
+        return this.repository.findByOrderByIdDesc(pageable).stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }

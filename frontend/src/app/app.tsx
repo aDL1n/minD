@@ -1,13 +1,16 @@
-import { Box, Center, Container, Flex, Group, IconButton, Input, ScrollArea } from "@chakra-ui/react";
+import { Box, Button, Center, Container, Flex, Group, IconButton, Input, ScrollArea } from "@chakra-ui/react";
 import { FaAngleDoubleRight } from "react-icons/fa";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import { Api, type Message as ChatMessage } from "@/features/api";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { toaster } from "@/components/ui/toaster";
 import Message from "@/components/app/Message";
 import Header from "@/components/app/Header";
 
+const api = new Api();
+const PAGE_SIZE = 20;
+
 const App = () => {
-    const api: Api = new Api();
 
     const background = useColorModeValue("#F1F0E8", "#1c1917")
     const border = useColorModeValue("#5b6568ff", "#4a413b")
@@ -20,72 +23,86 @@ const App = () => {
     document.getElementById('root')!.style.backgroundColor = background;
 
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-    const [hasMoreHistory, setHasMoreHistory] = useState(true);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const loadingRef = useRef(false);
+    const hasMoreRef = useRef(true);
+    const oldestIdRef = useRef<number | undefined>(undefined);
+    const generationRef = useRef(0);
+    const followLatestRef = useRef(true);
+    const anchorRef = useRef<{ element: HTMLElement; top: number } | null>(null);
+    const viewportRef = useRef<HTMLDivElement>(null);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const previousScrollHeightRef = useRef(0);
-    const viewportRef = useRef<HTMLDivElement>(null);
+    const loadHistory = useCallback(async () => {
+        if (loadingRef.current || !hasMoreRef.current) return;
+        loadingRef.current = true;
+        setLoadingHistory(true);
+        const generation = generationRef.current;
+        const oldestId = oldestIdRef.current;
+        try {
+            const data = oldestId === undefined
+                ? await api.getMessages(PAGE_SIZE)
+                : await api.getPreviousMessages(oldestId, PAGE_SIZE);
+            if (generation !== generationRef.current) return;
 
-    useEffect(() => {
-        api.getMessages(10).then((data: ChatMessage[]) => {
-            setMessages(data);
-        });
-
-        const eventSource = api.subscribe(
-            (message) => {
-                setMessages((previous) => [...previous, message]);
+            const firstMessage = viewportRef.current?.querySelector<HTMLElement>('[data-message-id]');
+            if (oldestId !== undefined && firstMessage) {
+                anchorRef.current = { element: firstMessage, top: firstMessage.getBoundingClientRect().top };
             }
-        );
-
-        messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
-
-        return () => {
-            eventSource.close();
-        };
-
+            if (data.length > 0) oldestIdRef.current = data[0].id;
+            hasMoreRef.current = data.length === PAGE_SIZE;
+            setHasMore(hasMoreRef.current);
+            setMessages(previous => {
+                const byId = new Map([...data, ...previous].map(message => [message.id, message]));
+                return [...byId.values()].sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+            });
+        } catch {
+            if (generation === generationRef.current) {
+                toaster.create({ description: "Не удалось загрузить историю. Попробуйте ещё раз.", type: "error" });
+            }
+        } finally {
+            if (generation === generationRef.current) {
+                loadingRef.current = false;
+                setLoadingHistory(false);
+            }
+        }
     }, []);
 
     useEffect(() => {
-        if (!isLoadingHistory && previousScrollHeightRef.current > 0 && viewportRef.current) {
-            const currentScrollHeight = viewportRef.current.scrollHeight;
-            viewportRef.current.scrollTo({top: currentScrollHeight - previousScrollHeightRef.current});
-            previousScrollHeightRef.current = 0;
-        }
-    }, [messages, isLoadingHistory]);
+        let active = true;
+        void loadHistory();
 
-    const fetchHistory = useCallback(async () => {
-        if (isLoadingHistory || !hasMoreHistory) return;
-
-        setIsLoadingHistory(true);
-
-        const oldestMessageId = messages.length > 0 ? messages[0].id : undefined;
-
-        if (oldestMessageId !== undefined) {
-            const oldMessages = await api.fetchMessageHistory(10, oldestMessageId);
-
-            if (oldMessages.length === 0) {
-                setHasMoreHistory(false);
-            } else {
-                previousScrollHeightRef.current = viewportRef.current?.scrollHeight || 0;
-                setMessages(prevMessages => [...oldMessages, ...prevMessages]);
+        const eventSource = api.subscribe(
+            (message) => {
+                if (active) {
+                    setMessages(previous => previous.some(item => item.id === message.id)
+                        ? previous : [...previous, message]);
+                }
             }
-        } else {
-            setHasMoreHistory(false);
-        }
+        );
 
-        setIsLoadingHistory(false);
-    }, [isLoadingHistory, hasMoreHistory, messages]);
+        return () => {
+            active = false;
+            generationRef.current += 1;
+            loadingRef.current = false;
+            eventSource.close();
+        };
 
-    const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-        const {scrollTop} = event.currentTarget;
-        if (scrollTop === 0) {
-            fetchHistory();
+    }, [loadHistory]);
+
+    useLayoutEffect(() => {
+        const viewport = viewportRef.current;
+        const anchor = anchorRef.current;
+        if (viewport && anchor) {
+            viewport.scrollTop += anchor.element.getBoundingClientRect().top - anchor.top;
+            anchorRef.current = null;
+        } else if (viewport && followLatestRef.current) {
+            viewport.scrollTop = viewport.scrollHeight;
         }
-    };
+    }, [messages]);
 
     const sendMessage = async () => {
         if (!inputRef.current?.value) return;
@@ -142,12 +159,24 @@ const App = () => {
                             >
                                 <Box overflowY="hidden" flex="1" width="100%">
                                     <ScrollArea.Root variant="hover" paddingTop="10px">
-                                        <ScrollArea.Viewport ref={viewportRef} onScroll={handleScroll}
-                                        >
+                                        <ScrollArea.Viewport ref={viewportRef} style={{ overflowAnchor: 'none' }}
+                                            onScroll={event => {
+                                                const viewport = event.currentTarget;
+                                                followLatestRef.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40;
+                                                if (viewport.scrollTop < 40) void loadHistory();
+                                            }}>
                                             <ScrollArea.Content width="100%" display="flex" flexDirection="column"
                                                                 alignItems="flex-start" spaceY="32px">
-                                                {Array.isArray(messages) && messages.map((message, id) => (
-                                                    <Message message={message} key={id}/>
+                                                {hasMore && (
+                                                    <Button variant="ghost" size="sm" alignSelf="center"
+                                                        loading={loadingHistory} onClick={() => void loadHistory()}>
+                                                        Загрузить ещё
+                                                    </Button>
+                                                )}
+                                                {messages.map(message => (
+                                                    <Box key={message.id} data-message-id={message.id}>
+                                                        <Message message={message}/>
+                                                    </Box>
                                                 ))}
                                                 <div ref={messagesEndRef}/>
                                             </ScrollArea.Content>
