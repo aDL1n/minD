@@ -19,20 +19,22 @@ public class MessageService {
     private final ClientService clientService;
 
     public @NonNull List<MessageDto> get(final @NonNull Pageable pageable) {
-        return this.repository.findByOrderByIdAsc(pageable)
+        return this.repository.findByOrderByIdDesc(pageable)
                 .stream()
                 .map(mapper::toDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                .reversed();
     }
 
     public @NonNull List<MessageDto> getPrevious(
             final @NonNull Long beforeId,
             final @NonNull Pageable pageable
     ) {
-        return this.repository.findByIdLessThanEqualOrderByIdAsc(beforeId, pageable)
+        return this.repository.findByIdLessThanEqualOrderByIdDesc(beforeId, pageable)
                 .stream()
                 .map(mapper::toDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                .reversed();
     }
 
     public void receive(final @NonNull MessageDto message) {
