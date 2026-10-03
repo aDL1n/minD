@@ -1,21 +1,17 @@
 import axios from "axios";
 import { toaster } from "@/components/ui/toaster";
 
-export interface ChatMessage {
+export interface Message {
     id?: number;
     message: string;
     timestamp?: number;
 }
 
 export class Api {
-    private baseUrl = "http://localhost:8080/api";
+    private baseUrl = "http://localhost:8080/api/v1";
 
-    constructor() {
-        this.getOnlineCount();
-    }
-
-    async getMessages(limit: number): Promise<ChatMessage[]> {
-        const response = await axios.get<ChatMessage[]>(`${this.baseUrl}/message/get`, {
+    async getMessages(limit: number): Promise<Message[]> {
+        const response = await axios.get<Message[]>(`${this.baseUrl}/message/get`, {
             params: { limit },
         });
 
@@ -23,7 +19,7 @@ export class Api {
         return response.data;
     }
 
-    async sendMessage(message: ChatMessage): Promise<ChatMessage> {
+    async sendMessage(message: Message): Promise<Message> {
         const response = await axios.post(
             `${this.baseUrl}/message/send`,
             JSON.stringify(message),
@@ -36,13 +32,13 @@ export class Api {
         return response.data;
     }
 
-    subscribeToNewMessages(
-        onMessage: (msg: ChatMessage) => void,
-        onError?: (err: Event) => void
+    subscribe(
+        onMessage: (message: Message) => void,
+        onError?: (error: Event) => void
     ) {
-        const eventSource = new EventSource(`${this.baseUrl}/message/subscribe`);
+        const eventSource = new EventSource(`${this.baseUrl}/subscribe`);
         eventSource.onmessage = (event) => {
-            const message: ChatMessage = JSON.parse(event.data);
+            const message: Message = JSON.parse(event.data);
             console.log(message);
             onMessage(message);
         };
@@ -55,21 +51,22 @@ export class Api {
             console.log("Heartbeat received");
         });
 
-        eventSource.onerror = (err) => {
-            console.error("SSE error", err);
-            if (onError) onError(err);
+        eventSource.onerror = (error) => {
+            console.error("SSE error", error);
+
+            if (onError) onError(error);
             eventSource.close();
         };
         return eventSource;
     }
 
-    async fetchMessageHistory(limit: number, beforeId?: number): Promise<ChatMessage[]> {
+    async fetchMessageHistory(limit: number, beforeId?: number): Promise<Message[]> {
         if (beforeId) {
             beforeId = beforeId - 1;
 
-            const response = await axios.get(`${this.baseUrl}/message/get/prev`, {
+            const response = await axios.get(`${this.baseUrl}/message/get/previous`, {
                 params: {
-                   beforeId, limit
+                    beforeId, limit
                 }
             });
 
@@ -81,12 +78,12 @@ export class Api {
 
     async getOnlineCount(): Promise<number> {
         try {
-            const response = await axios.get(`${this.baseUrl}/`);
+            const response = await axios.get(`${this.baseUrl}/online`);
             return response.data;
         } catch {
             toaster.create({
-            description: "Не удалось подключится к серверу",
-            type: "error",
+                description: "Не удалось подключится к серверу",
+                type: "error",
             })
         }
 
